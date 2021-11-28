@@ -2,7 +2,7 @@
 
 """
 Requirements:
-Python 3.5+
+Python 3.7+
 pip install -U discord.py pynacl youtube-dl
 You also need FFmpeg in your PATH environment variable or the FFmpeg.exe binary in your bot's directory on Windows.
 """
@@ -12,6 +12,8 @@ import functools
 import itertools
 import math
 import random
+import os
+import pickle
 
 import discord
 import youtube_dl
@@ -20,6 +22,8 @@ from discord.ext import commands
 
 # Silence useless bug reports messages
 youtube_dl.utils.bug_reports_message = lambda: 'error'
+
+TOKEN = 'OTEwNDYwNzg1Njk0NzM2NDM0.YZTKrg.WFc7-jc4xxvV1KLyiaPfSkE_6Pg'
 
 
 class VoiceError(Exception):
@@ -267,6 +271,21 @@ class Music(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.voice_states = {}
+        self.song_blacklist_path = 'song_bl_data.pickle'
+
+        if os.path.exists(self.song_blacklist_path):
+            with open(self.song_blacklist_path, 'rb') as f:
+                self.song_blacklist = pickle.load(f)
+        else:
+            self.song_blacklist = {}
+
+        self.user_blacklist = {}
+        self.subst_url = ''
+
+    @staticmethod
+    async def _save(object, path:str):
+        with open(path, 'wb') as f:
+            pickle.dump(object, f)
 
     def get_voice_state(self, ctx: commands.Context):
         state = self.voice_states.get(ctx.guild.id)
@@ -461,6 +480,11 @@ class Music(commands.Cog):
         ctx.voice_state.loop = not ctx.voice_state.loop
         await ctx.message.add_reaction('✅')
 
+    def _search_check(self, search: str):
+        if search not in self.song_blacklist:
+            return search
+        return self.song_blacklist[search]
+
     @commands.command(name='play')
     async def _play(self, ctx: commands.Context, *, search: str):
         """Plays a song.
@@ -475,7 +499,9 @@ class Music(commands.Cog):
 
         async with ctx.typing():
             try:
+                search = self._search_check(search)
                 source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
+
             except YTDLError as e:
                 await ctx.send('An error occurred while processing this request: {}'.format(str(e)))
             else:
@@ -483,6 +509,57 @@ class Music(commands.Cog):
 
                 await ctx.voice_state.songs.put(song)
                 await ctx.send('Enqueued {}'.format(str(source)))
+
+    @commands.command(name='song_bl')
+    async def _song_bl(self, ctx: commands.Context, *, arg: str):
+        '''This command allows to add song url to blacklist.
+        When trying to play some song from blacklist remove url song is played
+
+        song_bl -flag URl
+        flags:
+            -ss (set substitute url): set url for substitution
+            -a (append): append song url to blacklist
+            -r (remove): remove song url from blacklist
+            -s (show): show blacklist
+            -clear: clears whole blacklist
+            '''
+        args = arg.split(' ')
+        flag = args[0]
+        num_args = len(args)
+        # append
+        if flag == '-a' and num_args == 2:
+            if self.subst_url != '':
+                self.song_blacklist[args[1]] = self.subst_url
+                await self._save(self.song_blacklist, self.song_blacklist_path)
+            else:
+                await ctx.send('First set the remove url using: song_bl -sr REM_URL')
+        # set substitute
+        elif flag == '-ss' and num_args ==2:
+            self.subst_url = args[1]
+        # remove
+        elif flag == '-r' and num_args == 2:
+            del self.song_blacklist[args[1]]
+            await self._save(self.song_blacklist, self.song_blacklist_path)
+            await ctx.send(f'url: {args[1]} removed')
+        # show
+        elif flag == '-s':
+            out_str = ''
+            for url, rem_url in self.song_blacklist.items():
+                out_str += f'{url} -> {rem_url}\n'
+            if out_str:
+                await ctx.send(out_str)
+            else:
+                await ctx.send('Song blacklist is empty')
+        # clear blacklist
+        elif flag == '-clear':
+            self.song_blacklist = {}
+            await self._save(self.song_blacklist, self.song_blacklist_path)
+            await ctx.send('blacklist cleared')
+
+        else:
+            raise commands.CommandError('Invalid command')
+
+        print(self.song_blacklist)
 
     @_join.before_invoke
     @_play.before_invoke
@@ -503,4 +580,5 @@ bot.add_cog(Music(bot))
 async def on_ready():
     print('Logged in as:\n{0.user.name}\n{0.user.id}'.format(bot))
 
-bot.run('OTEwNDYwNzg1Njk0NzM2NDM0.YZTKrg.jOjC3T7dByy1r3OVMLI8wS26_CY')
+
+bot.run(TOKEN)
