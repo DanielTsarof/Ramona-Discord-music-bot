@@ -23,7 +23,7 @@ from discord.ext import commands
 # Silence useless bug reports messages
 youtube_dl.utils.bug_reports_message = lambda: 'error'
 
-TOKEN = 'OTEwNDYwNzg1Njk0NzM2NDM0.YZTKrg.WFc7-jc4xxvV1KLyiaPfSkE_6Pg'
+TOKEN = 'OTEwNDYwNzg1Njk0NzM2NDM0.YZTKrg.OvuwEYZRi5Ky10JCORKxkM4m550'
 
 
 class VoiceError(Exception):
@@ -123,6 +123,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
                     raise YTDLError('Couldn\'t retrieve any matches for `{}`'.format(webpage_url))
 
         return cls(ctx, discord.FFmpegPCMAudio(info['url'], **cls.FFMPEG_OPTIONS), data=info)
+
 
     @staticmethod
     def parse_duration(duration: int):
@@ -268,19 +269,24 @@ class VoiceState:
 
 
 class Music(commands.Cog):
+
+    @staticmethod
+    def _path_check(obj, path:str):
+        if os.path.exists(path):
+            with open(path, 'rb') as f:
+                return pickle.load(f)
+        return obj
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.voice_states = {}
         self.song_blacklist_path = 'song_bl_data.pickle'
+        self.user_blacklist_path = 'user_bl_data.pickle'
 
-        if os.path.exists(self.song_blacklist_path):
-            with open(self.song_blacklist_path, 'rb') as f:
-                self.song_blacklist = pickle.load(f)
-        else:
-            self.song_blacklist = {}
-
-        self.user_blacklist = {}
-        self.subst_url = ''
+        self.song_blacklist = self._path_check({}, self.song_blacklist_path)
+        self.user_blacklist = self._path_check({}, self.user_blacklist_path)
+        # defaul value
+        self.subst_url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
 
     @staticmethod
     async def _save(object, path:str):
@@ -322,7 +328,7 @@ class Music(commands.Cog):
         ctx.voice_state.voice = await destination.connect()
 
     @commands.command(name='summon')
-    @commands.has_permissions(manage_guild=True)
+    @commands.has_permissions(manage_guild=False)
     async def _summon(self, ctx: commands.Context, *, channel: discord.VoiceChannel = None):
         """Summons the bot to a voice channel.
         If no channel was specified, it joins your channel.
@@ -369,7 +375,7 @@ class Music(commands.Cog):
         await ctx.send(embed=ctx.voice_state.current.create_embed())
 
     @commands.command(name='pause')
-    @commands.has_permissions(manage_guild=True)
+    @commands.has_permissions(manage_guild=False)
     async def _pause(self, ctx: commands.Context):
         """Pauses the currently playing song."""
 
@@ -378,7 +384,7 @@ class Music(commands.Cog):
             await ctx.message.add_reaction('⏯')
 
     @commands.command(name='resume')
-    @commands.has_permissions(manage_guild=True)
+    @commands.has_permissions(manage_guild=False)
     async def _resume(self, ctx: commands.Context):
         """Resumes a currently paused song."""
 
@@ -387,7 +393,7 @@ class Music(commands.Cog):
             await ctx.message.add_reaction('⏯')
 
     @commands.command(name='stop')
-    @commands.has_permissions(manage_guild=True)
+    @commands.has_permissions(manage_guild=False)
     async def _stop(self, ctx: commands.Context):
         """Stops playing song and clears the queue."""
 
@@ -480,10 +486,12 @@ class Music(commands.Cog):
         ctx.voice_state.loop = not ctx.voice_state.loop
         await ctx.message.add_reaction('✅')
 
-    def _search_check(self, search: str):
-        if search not in self.song_blacklist:
-            return search
-        return self.song_blacklist[search]
+    def _search_check(self, search: str, user_name:str):
+        if user_name in self.user_blacklist:
+            return self.user_blacklist[user_name]
+        if search in self.song_blacklist:
+            return self.song_blacklist[search]
+        return search
 
     @commands.command(name='play')
     async def _play(self, ctx: commands.Context, *, search: str):
@@ -499,7 +507,8 @@ class Music(commands.Cog):
 
         async with ctx.typing():
             try:
-                search = self._search_check(search)
+                #print(type(ctx.author.name), ctx.author.name)
+                search = self._search_check(search, ctx.author.name)
                 source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
 
             except YTDLError as e:
@@ -559,7 +568,71 @@ class Music(commands.Cog):
         else:
             raise commands.CommandError('Invalid command')
 
-        print(self.song_blacklist)
+        #print(self.song_blacklist)
+
+
+    @commands.command(name='user_bl')
+    async def _user_bl(self, ctx: commands.Context, *, arg: str):
+        '''This command allows to add user name to blacklist.
+        When trying to play some song from this user remove url song is played
+
+        user_bl -flag*user_id
+        flags:
+            -ss (set substitute url): set url for substitution
+            -a (append): append user_name to blacklist
+            -r (remove): remove user_name from blacklist
+            -s (show): show blacklist
+            -clear: clears whole blacklist
+            '''
+        args = arg.split('*')
+        flag = args[0]
+        num_args = len(args)
+        # append
+        if flag == '-a' and num_args == 2:
+            if self.subst_url != '':
+                self.user_blacklist[str(args[1])] = self.subst_url
+                await self._save(self.user_blacklist, self.user_blacklist_path)
+            else:
+                await ctx.send('First set the remove url using: user_bl -sr REM_URL')
+        # set substitute
+        elif flag == '-ss' and num_args == 2:
+            self.subst_url = args[1]
+        # remove
+        elif flag == '-r' and num_args == 2:
+            del self.user_blacklist[str(args[1])]
+            await self._save(self.user_blacklist, self.user_blacklist_path)
+            await ctx.send(f'user: {args[1]} removed from blacklist')
+        # show
+        elif flag == '-s':
+            out_str = ''
+            for url, rem_url in self.user_blacklist.items():
+                out_str += f'{url} -> {rem_url}\n'
+            if out_str:
+                await ctx.send(out_str)
+            else:
+                await ctx.send('User blacklist is empty')
+        # clear blacklist
+        elif flag == '-clear':
+            self.user_blacklist = {}
+            await self._save(self.user_blacklist, self.user_blacklist_path)
+            await ctx.send('blacklist cleared')
+
+        else:
+            raise commands.CommandError('Invalid command')
+
+        #print(self.user_blacklist)
+
+    @commands.command(name='ramona')
+    async def _ramona(self, ctx: commands.Context):
+        '''Ramona
+        '''
+        if not ctx.voice_state.voice:
+            await ctx.invoke(self._join)
+
+        source = await YTDLSource.create_source(ctx, 'https://www.youtube.com/watch?v=fdbOkE9AwRY', loop=self.bot.loop)
+        song = Song(source)
+        await ctx.voice_state.songs.put(song)
+
 
     @_join.before_invoke
     @_play.before_invoke
