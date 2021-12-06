@@ -1,8 +1,0 @@
-__pycache__/
-.idea/
-.pytest_cache/
-/venv
-readme.txt
-readme
-song_bl_data.pickle
-user_bl_data.pickle
