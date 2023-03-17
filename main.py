@@ -14,7 +14,7 @@ import math
 import random
 import os
 import pickle
-
+# pip install --user git+https://github.com/ytdl-org/youtube-dl.git#branch=master
 import discord
 import youtube_dl
 from async_timeout import timeout
@@ -24,7 +24,7 @@ from discord.ext import commands
 youtube_dl.utils.bug_reports_message = lambda: 'error'
 
 # Add your token here
-TOKEN = ''
+TOKEN = 'OTEwNDYwNzg1Njk0NzM2NDM0.YZTKrg.fUlaeaCAmbalOiNenBrXC8vVYQ8'
 
 
 class VoiceError(Exception):
@@ -289,6 +289,7 @@ class Music(commands.Cog):
         # defaul value
         self.subst_url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
 
+
     @staticmethod
     async def _save(object, path:str):
         with open(path, 'wb') as f:
@@ -322,6 +323,7 @@ class Music(commands.Cog):
     async def _join(self, ctx: commands.Context):
         """Joins a voice channel."""
         destination = ctx.author.voice.channel
+        print(destination)
         if ctx.voice_state.voice:
             await ctx.voice_state.voice.move_to(destination)
             return
@@ -646,12 +648,21 @@ class Music(commands.Cog):
                 raise commands.CommandError('Bot is already in a voice channel.')
 
 
-bot = commands.Bot('!', description='Yet another music bot.')
-bot.add_cog(Music(bot))
+intents = discord.Intents.default() # Подключаем "Разрешения"
+intents.message_content = True
+bot = commands.Bot('|', description='Yet another music bot.', intents=intents)
+
+async def setup():
+    await bot.wait_until_ready()
+    await bot.add_cog(Music(bot))
+
+#bot.loop.create_task(setup())
+#bot.add_cog(Music(bot))
 
 
 @bot.event
 async def on_ready():
+    bot.loop.create_task(setup())
     print('Logged in as:\n{0.user.name}\n{0.user.id}'.format(bot))
 
 
