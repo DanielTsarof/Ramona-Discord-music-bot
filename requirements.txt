@@ -2,3 +2,5 @@ discord
 youtube_dl
 async_timeout
 PyNaCl
+pydantic
+pyyaml

@@ -13,14 +13,14 @@ import youtube_dl
 from discord.ext import commands
 
 from src.cogs.music import Music
+from src.config import get_config
 
 # Silence useless bug reports messages
 youtube_dl.utils.bug_reports_message = lambda: 'error'
 
-# Add your token here
-TOKEN = 'OTEwNDYwNzg1Njk0NzM2NDM0.GKdPjr.NsOp6vtHuZXEQf0aHLtuiAawdWnhHC6xyBOvUM'
-
 if __name__ == '__main__':
+    config = get_config('config.yaml')
+    TOKEN = config.token
     intents = discord.Intents.default()  # Подключаем "Разрешения"
     intents.message_content = True
     bot = commands.Bot('|', description='Yet another music bot.', intents=intents)
