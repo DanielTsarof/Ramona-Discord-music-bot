@@ -24,7 +24,7 @@ from discord.ext import commands
 youtube_dl.utils.bug_reports_message = lambda: 'error'
 
 # Add your token here
-TOKEN = 'OTEwNDYwNzg1Njk0NzM2NDM0.YZTKrg.fUlaeaCAmbalOiNenBrXC8vVYQ8'
+TOKEN = ''
 
 
 class VoiceError(Exception):
