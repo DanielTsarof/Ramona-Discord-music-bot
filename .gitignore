@@ -4,3 +4,4 @@ __pycache__/
 /venv
 song_bl_data.pickle
 user_bl_data.pickle
+config.yaml

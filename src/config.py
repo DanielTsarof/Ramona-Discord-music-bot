@@ -5,12 +5,25 @@ from pydantic import BaseModel
 from yaml.loader import SafeLoader
 
 
+class General(BaseModel):
+    discord_token: str
+    openai_token: str
+
+
+class Speech(BaseModel):
+    model: str
+    temperature: float
+    ans_max_length: int
+    max_tokens: int
+    prompt: str
+
+
 class IConfig(BaseModel):
     """
     Base config class
     """
-    token: str
-
+    general: General
+    speech: Speech
 
 
 def get_config(config_path: str):

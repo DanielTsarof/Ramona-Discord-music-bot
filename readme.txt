@@ -6,6 +6,19 @@
 	pip uninstall youtube-dl
 	pip install git+https://github.com/ytdl-org/youtube-dl.git
 
+## example config.yaml file:
+
+    general:
+      discord_token: '...'
+      openai_token: '...'
+
+    speech:
+      model: 'gpt-3.5-turbo'
+      temperature: 1
+      ans_max_length: 70
+      max_tokens: 1500
+      prompt: 'ramona-classic.txt'
+
 The basis of the project is taken from here https://gist.github.com/vbe0201/ade9b80f2d3b64643d854938d40a0a2d
 
 I made some improvements and added new features. user_bl and song_bl commands have been added (see functions
