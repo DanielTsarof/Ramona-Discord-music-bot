@@ -13,7 +13,7 @@ import youtube_dl
 from discord.ext import commands
 
 from src.cogs.music import Music
-from src.cogs.speech import MyMessageCog
+from src.cogs.speech import Speech
 from src.config import get_config
 
 # Silence useless bug reports messages
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     async def setup():
         await bot.wait_until_ready()
         await bot.add_cog(Music(bot))
-        await bot.add_cog(MyMessageCog(bot, config))
+        await bot.add_cog(Speech(bot, config))
 
 
     @bot.event

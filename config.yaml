@@ -1,1 +1,10 @@
-token: 'token'
+general:
+  discord_token: 'OTEwNDYwNzg1Njk0NzM2NDM0.GEtjpp.BdarJkKuaLuNfVxxgX3Ki7cw1kMvbx6d5ZqvdM'
+  openai_token: ''
+
+speech:
+  model: 'gpt-3.5-turbo'
+  temperature: 1
+  ans_max_length: 70
+  max_tokens: 1500
+  prompt: 'ramona-classic.txt'

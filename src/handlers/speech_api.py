@@ -1,10 +1,12 @@
 from typing import List
+import os
 
 import aiohttp
 import openai
 import tiktoken
 
 from src.config import Speech
+from src.handlers.utils import get_paths
 
 
 def get_prompt(path: str, max_length: int):
@@ -30,7 +32,17 @@ class SpeechModel:
         return num_tokens
 
     def change_prompt(self, name: str):
+        """
+        :param name: new prompt name
+        """
         self.prompt = get_prompt(f'src/prompts/{name}.txt', self.config.ans_max_length)
+
+    def show_personalities(self):
+        """
+        shows list of available personalities
+        """
+        names = [path.replace('.txt', '').split(os.sep)[-1] for path in get_paths('src/prompts', 'txt')]
+        return '\n'.join(names)
 
     async def fetch_gpt_response(self, request: str):
         url = "https://api.openai.com/v1/chat/completions"
