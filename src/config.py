@@ -28,6 +28,6 @@ class IConfig(BaseModel):
 
 def get_config(config_path: str):
     # Open the file and load the file
-    with open(config_path) as f:
+    with open(config_path, encoding='utf-8') as f:
         data = yaml.load(f, Loader=SafeLoader)
         return IConfig(**data)
