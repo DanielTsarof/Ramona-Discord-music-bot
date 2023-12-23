@@ -10,6 +10,9 @@ from src.exceptions import VoiceError, YTDLError
 from src.handlers.youtube_music import YTDLSource
 from src.schemas.music_yt import VoiceState, Song
 
+intents = discord.Intents.default()
+intents.message_content = True
+intents.voice_states = True
 
 class Music(commands.Cog):
 
