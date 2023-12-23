@@ -5,6 +5,10 @@ import aiohttp
 from src.config import config
 
 
+def is_playlist(url: str):
+    return url.split("?")[1].startswith('list')
+
+
 async def get_playlist_items_page(
         playlist_id: str,
         page_token: str = None,

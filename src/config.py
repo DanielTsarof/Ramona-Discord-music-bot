@@ -8,6 +8,7 @@ from yaml.loader import SafeLoader
 class General(BaseModel):
     discord_token: str
     openai_token: str
+    youtube_token: str
 
 
 class Speech(BaseModel):
@@ -31,3 +32,5 @@ def get_config(config_path: str):
     with open(config_path, encoding='utf-8') as f:
         data = yaml.load(f, Loader=SafeLoader)
         return IConfig(**data)
+
+config = get_config('config.yaml')

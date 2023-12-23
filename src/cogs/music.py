@@ -9,6 +9,7 @@ from discord.ext import commands
 from src.exceptions import VoiceError, YTDLError
 from src.handlers.youtube_music import YTDLSource
 from src.schemas.music_yt import VoiceState, Song
+from src.handlers.playlist_proc import is_playlist, get_playlist_items
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -140,7 +141,6 @@ class Music(commands.Cog):
             await ctx.message.add_reaction('⏯')
 
     @commands.command(name='stop')
-    @commands.has_permissions(manage_guild=False)
     async def _stop(self, ctx: commands.Context):
         """Stops playing song and clears the queue."""
 
@@ -178,7 +178,7 @@ class Music(commands.Cog):
             await ctx.send('You have already voted to skip this song.')
 
     @commands.command(name='queue')
-    async def _queue(self, ctx: commands.Context, *, page: int = 1):
+    async def _queue(self, ctx: commands.Context, *, items_per_page: int = 20, page: int = 1):
         """Shows the player's queue.
         You can optionally specify the page to show. Each page contains 10 elements.
         """
@@ -186,7 +186,7 @@ class Music(commands.Cog):
         if len(ctx.voice_state.songs) == 0:
             return await ctx.send('Empty queue.')
 
-        items_per_page = 10
+        #items_per_page = 10
         pages = math.ceil(len(ctx.voice_state.songs) / items_per_page)
 
         start = (page - 1) * items_per_page
@@ -252,19 +252,33 @@ class Music(commands.Cog):
         if not ctx.voice_state.voice:
             await ctx.invoke(self._join)
 
-        async with ctx.typing():
-            try:
-                # print(type(ctx.author.name), ctx.author.name)
-                search = self._search_check(search, ctx.author.name)
-                source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
+        if is_playlist(search):
+            items = await get_playlist_items(search)
+            for item in items:
+                async with ctx.typing():
+                    try:
+                        search = self._search_check(item, ctx.author.name)
+                        source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
 
-            except YTDLError as e:
-                await ctx.send('An error occurred while processing this request: {}'.format(str(e)))
-            else:
-                song = Song(source)
+                    except YTDLError as e:
+                        await ctx.send('An error occurred while processing this request: {}'.format(str(e)))
+                    else:
+                        song = Song(source)
 
-                await ctx.voice_state.songs.put(song)
-                await ctx.send('Enqueued {}'.format(str(source)))
+                        await ctx.voice_state.songs.put(song)
+        else:
+            async with ctx.typing():
+                try:
+                    search = self._search_check(search, ctx.author.name)
+                    source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
+
+                except YTDLError as e:
+                    await ctx.send('An error occurred while processing this request: {}'.format(str(e)))
+                else:
+                    song = Song(source)
+
+                    await ctx.voice_state.songs.put(song)
+                    await ctx.send('Enqueued {}'.format(str(source)))
 
     @commands.command(name='song_bl')
     async def _song_bl(self, ctx: commands.Context, *, arg: str):
