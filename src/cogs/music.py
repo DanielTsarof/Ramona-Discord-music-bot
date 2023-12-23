@@ -29,6 +29,7 @@ class Music(commands.Cog):
         self.voice_states = {}
         self.song_blacklist_path = 'song_bl_data.pickle'
         self.user_blacklist_path = 'user_bl_data.pickle'
+        self.stop = False
 
         self.song_blacklist = self._path_check({}, self.song_blacklist_path)
         self.user_blacklist = self._path_check({}, self.user_blacklist_path)
@@ -145,7 +146,7 @@ class Music(commands.Cog):
         """Stops playing song and clears the queue."""
 
         ctx.voice_state.songs.clear()
-
+        self.stop = True
         if ctx.voice_state.is_playing:
             ctx.voice_state.voice.stop()
             await ctx.message.add_reaction('⏹')
@@ -186,7 +187,7 @@ class Music(commands.Cog):
         if len(ctx.voice_state.songs) == 0:
             return await ctx.send('Empty queue.')
 
-        items_per_page = 50
+        items_per_page = 15
         pages = math.ceil(len(ctx.voice_state.songs) / items_per_page)
 
         start = (page - 1) * items_per_page
@@ -248,7 +249,6 @@ class Music(commands.Cog):
         This command automatically searches from various sites if no URL is provided.
         A list of these sites can be found here: https://rg3.github.io/youtube-dl/supportedsites.html
         """
-
         if not ctx.voice_state.voice:
             await ctx.invoke(self._join)
 
