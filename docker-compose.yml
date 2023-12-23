@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  ramona_bot-app:
+    build:
+      context: .
+      dockerfile: app.Dockerfile
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+      - ./logs:/app/logs

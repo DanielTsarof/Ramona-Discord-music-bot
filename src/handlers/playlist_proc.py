@@ -6,7 +6,10 @@ from src.config import config
 
 
 def is_playlist(url: str):
-    return url.split("?")[1].startswith('list')
+    try:
+        return url.split("?")[1].startswith('list')
+    except IndexError:
+        return False
 
 
 async def get_playlist_items_page(
