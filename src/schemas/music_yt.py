@@ -1,3 +1,4 @@
+from typing import Iterable
 import asyncio
 import itertools
 import random
@@ -52,6 +53,9 @@ class SongQueue(asyncio.Queue):
 
     def remove(self, index: int):
         del self._queue[index]
+
+    def put_many(self, items: Iterable):
+        self._queue.extend(items)
 
 
 class VoiceState:
