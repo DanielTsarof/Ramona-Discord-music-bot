@@ -130,6 +130,7 @@ class SpeechModelA21(SpeechModelABC):
         response = await self.client.chat.completions.create(
             messages=messages,
             model="jamba-1.5-mini",
+            temperature=self.config.temperature
         )
 
         return response.choices[0].message.content
