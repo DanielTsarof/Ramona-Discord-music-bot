@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Literal
 
 import yaml
 from pydantic import BaseModel
@@ -7,11 +8,12 @@ from yaml.loader import SafeLoader
 
 class General(BaseModel):
     discord_token: str
-    openai_token: str
+    llm_api_key: str
     youtube_token: str
 
 
 class Speech(BaseModel):
+    provider: Literal['openai', 'ai21']
     model: str
     temperature: float
     ans_max_length: int

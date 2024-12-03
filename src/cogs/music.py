@@ -11,9 +11,6 @@ from src.handlers.youtube_music import YTDLSource
 from src.schemas.music_yt import VoiceState, Song
 from src.handlers.playlist_proc import is_playlist, get_playlist_items
 
-intents = discord.Intents.default()
-intents.message_content = True
-intents.voice_states = True
 
 class Music(commands.Cog):
 

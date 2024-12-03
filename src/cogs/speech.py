@@ -1,14 +1,17 @@
 import discord
 from discord.ext import commands
-from src.handlers.speech_api import SpeechModel
+from src.handlers.speech_api import get_speech_model
 from src.config import IConfig
 
 
 class Speech(commands.Cog):
     def __init__(self, bot, config: IConfig):
         self.bot = bot
-        self.speech_model = SpeechModel(config.general.openai_token,
-                                        config.speech)
+        self.speech_model = get_speech_model(
+            config.speech.provider,
+            config.speech,
+            config.general.llm_api_key
+        )
 
     @commands.Cog.listener()
     async def on_message(self, message):

@@ -1,9 +1,10 @@
 general:
   discord_token: ''
-  openai_token: ''
+  llm_api_key: ''
   youtube_token: ''
 
 speech:
+  provider: 'ai21'  # ai21, openai
   model: 'gpt-3.5-turbo'
   temperature: 1
   ans_max_length: 70
