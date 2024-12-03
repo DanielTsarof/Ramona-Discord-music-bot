@@ -24,6 +24,7 @@ if __name__ == '__main__':
     TOKEN = config.general.discord_token
     intents = discord.Intents.default()  # Подключаем "Разрешения"
     intents.message_content = True
+    intents.voice_states = True
     bot = commands.Bot('|', description='Yet another music bot.', intents=intents)
 
 
